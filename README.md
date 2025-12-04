@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BuildIndex – Device Orbits
 
-## Getting Started
+Solar-system-inspired device spec explorer. Next.js (App Router) + TypeScript + Tailwind v4, with Prisma/SQLite for data, Sketchfab Viewer API for 3D embeds, and TechSpecs as the upstream specs source.
 
-First, run the development server:
+## Stack
+- Next.js 16, React 19, TypeScript
+- Tailwind CSS v4 (dark/space theming)
+- Prisma + SQLite (seeded demo data)
+- Zustand for shared state (search/selection/orbit controls)
+- Sketchfab Viewer API (iframe) for 3D, TechSpecs API for specs enrichment
+- Auth: bcrypt-hashed passwords + cookie sessions (Prisma Session table)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Structure
+- `src/app` – routes (home, auth pages, API routes)
+- `src/domain` – domain models
+- `src/features/device` – mock data, stores, TechSpecs client
+- `src/features/layout` – header/search
+- `src/features/visualization` – Sketchfab viewer + orbiting spec cards + orbit controls store
+- `prisma` – schema + seed
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
+1) Copy `.env.example` ? `.env` and set:
+   - `DATABASE_URL` (defaults to `file:./prisma/dev.db`)
+   - `TECHSPECS_API_KEY` (for remote enrichment in `/api/devices/search`)
+   - `SKETCHFAB_TOKEN` and `NEXT_PUBLIC_SKETCHFAB_TOKEN` (viewer access)
+2) Sync DB + seed demo data:
+   ```bash
+   npm run db:push -- --accept-data-loss
+   npm run db:seed
+   ```
+3) Dev server:
+   ```bash
+   npm run dev
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API endpoints
+- `GET /api/devices/search?query=` – DB-first search, enrich via TechSpecs (persisting matches), mock fallback
+- `GET /api/devices/[id]` – DB device + categories/specs (mock fallback)
+- `POST /api/auth/register` – create user + session cookie
+- `POST /api/auth/login` – login + session cookie
+- `POST /api/auth/logout` – clear session
+- `GET /api/auth/me` – current user (401 if none)
+- `GET/POST/DELETE /api/favorites` – list/add/remove favorite devices (auth required)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## External providers
+- Specs: TechSpecs API (enrichment is lazy during search and persisted to SQLite)
+- 3D: Sketchfab Viewer API iframe embed (no file downloads). Provide `sketchfabUid` per device + token for private models.
 
-## Learn More
+## Auth
+- Passwords hashed with bcryptjs
+- Sessions stored in Prisma `Session` table, cookie `bi_session` (httpOnly, sameSite=lax)
 
-To learn more about Next.js, take a look at the following resources:
+## Orbit controls
+- Live speed + ellipse sliders (Zustand) affect all orbiting spec cards; hover a card to pause its orbit.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Next steps
+- Broaden TechSpecs enrichment (pull spec fields) and map to category slots.
+- Display auth state in header + enable favourites UI.
+- Refine orbit paths and add R3F-powered effects/particles.

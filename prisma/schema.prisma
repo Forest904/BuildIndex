@@ -1,0 +1,91 @@
+// Prisma schema for BuildIndex device orbits
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String               @id @default(cuid())
+  email        String               @unique
+  username     String?
+  passwordHash String
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  sessions     Session[]
+  favorites    UserFavoriteDevice[]
+}
+
+model Device {
+  id            String               @id @default(cuid())
+  name          String
+  brand         String?
+  modelNumber   String?
+  releaseDate   DateTime?
+  priceUSD      Float?
+  imageUrl      String?
+  modelUrl      String?
+  sketchfabUid  String?              @unique
+  techSpecsId   String?              @unique
+  description   String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  categories    SpecCategory[]
+  favorites     UserFavoriteDevice[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+model SpecCategory {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String
+  summary     String?
+  orbitRadius Int?
+  orbitSpeed  Float?
+  orbitPhase  Float?
+
+  device   Device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceId String
+  specs    SpecItem[]
+
+  @@unique([deviceId, slug])
+}
+
+model SpecItem {
+  id          String          @id @default(cuid())
+  key         String
+  label       String
+  value       String
+  unit        String?
+  importance  String?
+
+  category   SpecCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+}
+
+model UserFavoriteDevice {
+  id        String   @id @default(cuid())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  device  Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceId String
+
+  @@unique([userId, deviceId])
+}

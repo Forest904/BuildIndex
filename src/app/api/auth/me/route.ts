@@ -1,0 +1,18 @@
+import { getSession } from "@/lib/auth";
+import { NextResponse } from "next/server";
+
+export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ user: null }, { status: 401 });
+  }
+  const { user } = session;
+  return NextResponse.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      createdAt: user.createdAt,
+    },
+  });
+}

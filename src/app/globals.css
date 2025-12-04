@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #05070d;
+  --panel: #0c1224;
+  --panel-strong: #0c162b;
+  --foreground: #e6edff;
+  --muted: #9fb3ce;
+  --accent: #67e8f9;
+  --accent-2: #a855f7;
+  --grid: rgba(255, 255, 255, 0.04);
 }
 
 @theme inline {
@@ -12,15 +18,49 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(103, 232, 249, 0.12), transparent 35%),
+    radial-gradient(ellipse at 80% 0%, rgba(168, 85, 247, 0.18), transparent 28%),
+    radial-gradient(circle at 50% 75%, rgba(15, 23, 42, 0.8), transparent 50%),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+}
+
+.space-grid {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.8), transparent 65%);
+}
+
+.orbit-animate {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform: translate(-50%, -50%) rotate(var(--phase, 0deg)) translateX(var(--radius, 180px)) rotate(calc(-1 * var(--phase, 0deg))) scaleY(var(--ellipse, 1));
+  animation: orbit var(--duration, 18s) linear infinite;
+  transform-origin: center;
+}
+
+.orbit-animate.paused {
+  animation-play-state: paused;
+}
+
+@keyframes orbit {
+  from {
+    transform: translate(-50%, -50%) rotate(var(--phase, 0deg)) translateX(var(--radius, 180px)) rotate(calc(-1 * var(--phase, 0deg))) scaleY(var(--ellipse, 1));
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(calc(360deg + var(--phase, 0deg))) translateX(var(--radius, 180px)) rotate(calc(-360deg - var(--phase, 0deg))) scaleY(var(--ellipse, 1));
+  }
 }
