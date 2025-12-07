@@ -175,6 +175,8 @@ async function main() {
         priceUSD: device.priceUSD,
         imageUrl: device.imageUrl,
         modelUrl: device.modelUrl,
+        sketchfabUid: device.sketchfabUid,
+        techSpecsId: device.techSpecsId,
         description: device.description,
       },
       create: {
@@ -186,6 +188,8 @@ async function main() {
         priceUSD: device.priceUSD,
         imageUrl: device.imageUrl,
         modelUrl: device.modelUrl,
+        sketchfabUid: device.sketchfabUid,
+        techSpecsId: device.techSpecsId,
         description: device.description,
       },
     });

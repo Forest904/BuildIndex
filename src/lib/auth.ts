@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import prisma from "./prisma";
 
 const SESSION_COOKIE = "bi_session";
-const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
@@ -16,10 +16,13 @@ export async function verifyPassword(password: string, hash: string) {
 
 export async function createSession(userId: string) {
   const token = randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + SESSION_MAX_AGE * 1000);
+
   await prisma.session.create({
     data: {
       token,
       userId,
+      expiresAt,
     },
   });
 
@@ -55,6 +58,13 @@ export async function getSession() {
   });
 
   if (!session?.user) return null;
+
+  if (session.expiresAt && session.expiresAt.getTime() < Date.now()) {
+    await prisma.session.deleteMany({ where: { token } });
+    cookieStore.delete(SESSION_COOKIE);
+    return null;
+  }
+
   return { token, user: session.user };
 }
 

@@ -167,7 +167,7 @@ export function Header() {
                 <span className="text-[11px] uppercase tracking-[0.08em] text-slate-500">Signed in</span>
                 <span className="font-medium">{user.email}</span>
               </div>
-              <span className="text-xs text-slate-400">{userMenuOpen ? "?" : "?"}</span>
+              <span className="text-xs text-slate-400">{userMenuOpen ? "^" : "v"}</span>
             </button>
             {userMenuOpen && (
               <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 text-sm text-slate-200 shadow-2xl backdrop-blur">
