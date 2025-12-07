@@ -9,7 +9,7 @@ interface OrbitState {
 
 export const useOrbitStore = create<OrbitState>((set) => ({
   speedMultiplier: 1,
-  ellipse: 1,
+  ellipse: 0.8,
   setSpeedMultiplier: (value) => set({ speedMultiplier: value }),
   setEllipse: (value) => set({ ellipse: value }),
 }));

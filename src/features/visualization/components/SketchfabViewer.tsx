@@ -133,8 +133,6 @@ export function SketchfabViewer({ sketchfabUid, className }: SketchfabViewerProp
           className={`h-full w-full ${status === "ready" ? "opacity-100" : "opacity-0"}`}
           allow="autoplay; fullscreen; xr-spatial-tracking"
           allowFullScreen
-          mozallowfullscreen
-          webkitallowfullscreen
         />
       </div>
     </div>
