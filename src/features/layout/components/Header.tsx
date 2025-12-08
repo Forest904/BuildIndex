@@ -125,7 +125,7 @@ export function Header() {
             className="pl-10"
           />
           <p className="mt-1 text-xs text-slate-500">
-            Live suggestions from the local devices.csv dataset; Sketchfab UIDs still flow through the device.
+            Live suggestions from the local devices.csv dataset; 3D model UIDs now come straight from the CSV feed.
           </p>
 
           {open && searchResults.length > 0 && (

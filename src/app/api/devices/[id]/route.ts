@@ -1,12 +1,12 @@
 import { mockDevices } from "@/features/device/data/mockDevices";
 import { getDeviceFromCsv } from "@/features/device/services/deviceCsvSource";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  _request: Request,
-  context: { params: { id: string } },
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = context.params;
+  const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ message: "Device id is required" }, { status: 400 });
   }

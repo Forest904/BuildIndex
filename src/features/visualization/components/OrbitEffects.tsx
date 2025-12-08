@@ -5,7 +5,7 @@ import { useOrbitStore } from "@/features/visualization/state/useOrbitStore";
 import { Html } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BufferGeometry, Color, Group, Points, Vector3 } from "three";
+import { BufferGeometry, Color, Float32BufferAttribute, Group, PerspectiveCamera, Points, Vector3 } from "three";
 
 const PARTICLE_POSITIONS = (() => {
   const arr = new Float32Array(300 * 3);
@@ -27,6 +27,10 @@ const PARTICLE_POSITIONS = (() => {
 function ParticleField() {
   const { speedMultiplier } = useOrbitStore();
   const pointsRef = useRef<Points>(null);
+  const positionsAttribute = useMemo(
+    () => new Float32BufferAttribute(PARTICLE_POSITIONS, 3),
+    [],
+  );
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
@@ -36,8 +40,10 @@ function ParticleField() {
   });
 
   return (
-    <points ref={pointsRef} positions={PARTICLE_POSITIONS}>
-      {/* @ts-expect-error three typings */}
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <primitive attach="attributes-position" object={positionsAttribute} />
+      </bufferGeometry>
       <pointsMaterial size={0.06} color={new Color("#67e8f9").convertSRGBToLinear()} transparent opacity={0.6} />
     </points>
   );
@@ -114,9 +120,10 @@ function Planetarium({ categories }: { categories: SpecCategory[] }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const groupRef = useRef<Group>(null);
   const clockRef = useRef(0);
-  const pausedAnglesRef = useRef<Partial<Record<string, number>>>({});
+  const pauseMetaRef = useRef<Partial<Record<string, { time: number; angle: number }>>>({});
+  const angleOffsetsRef = useRef<Partial<Record<string, number>>>({});
   const orbitNodes = useMemo<OrbitNode[]>(() => {
-    const safeEllipse = Number.isFinite(ellipse) ? ellipse : 0.8;
+    const safeEllipse = Number.isFinite(ellipse) ? ellipse : 0.5;
     const clampPositive = (val: number, fallback: number) => (Number.isFinite(val) && val > 0 ? val : fallback);
     const palette = ["#38bdf8", "#a855f7", "#22d3ee", "#60a5fa", "#f472b6", "#34d399"];
     const safeCategories = (categories ?? []).filter((c): c is SpecCategory => !!c);
@@ -124,7 +131,7 @@ function Planetarium({ categories }: { categories: SpecCategory[] }) {
       const baseRadius = 4.2;
       const spacing = 0.9;
       const radius = clampPositive(baseRadius + index * spacing, baseRadius);
-      const flatten = clampPositive((0.55 + (index % 3) * 0.06) * safeEllipse, 0.6);
+      const flatten = clampPositive((0.55 + (index % 3) * 0.06) * safeEllipse * 1.15, 0.6);
       const phase = ((index * 0.7 + (category.orbitHint?.phase ?? 0) / 90) % (Math.PI * 2)) || 0;
       const depth = clampPositive(Math.abs(((index % 5) - 2) * 0.9), 0.1) * (index % 2 === 0 ? 1 : -1);
       const speed = clampPositive(0.18 + index * 0.035, 0.18);
@@ -148,19 +155,31 @@ function Planetarium({ categories }: { categories: SpecCategory[] }) {
       const child = g.children[i] as Group | undefined;
       if (!child) return;
       const planetMesh = child.children[1];
-      const runningAngle = t * node.speed + node.phase;
-      if (hoveredId === node.category.id && pausedAnglesRef.current[node.category.id] === undefined) {
-        pausedAnglesRef.current[node.category.id] = runningAngle;
+      const isHovered = hoveredId === node.category.id;
+      const pauseData = pauseMetaRef.current[node.category.id];
+      const existingOffset = angleOffsetsRef.current[node.category.id] ?? 0;
+
+      if (!isHovered && pauseData) {
+        const pausedDuration = t - pauseData.time;
+        angleOffsetsRef.current[node.category.id] = existingOffset - pausedDuration * node.speed;
+        delete pauseMetaRef.current[node.category.id];
       }
-      if (hoveredId !== node.category.id && pausedAnglesRef.current[node.category.id] !== undefined) {
-        delete pausedAnglesRef.current[node.category.id];
+
+      const offset = angleOffsetsRef.current[node.category.id] ?? 0;
+      let angle = t * node.speed + node.phase + offset;
+
+      if (isHovered) {
+        if (!pauseMetaRef.current[node.category.id]) {
+          pauseMetaRef.current[node.category.id] = { time: t, angle };
+        }
+        angle = pauseMetaRef.current[node.category.id]?.angle ?? angle;
       }
-      const angle = pausedAnglesRef.current[node.category.id] ?? runningAngle;
+
       const x = node.radius * Math.cos(angle);
       const y = node.radius * Math.sin(angle) * node.flatten;
       const z = node.depth;
       child.position.set(x, y, z);
-      if (hoveredId !== node.category.id && planetMesh) {
+      if (!pauseMetaRef.current[node.category.id] && planetMesh) {
         planetMesh.rotation.y += delta * 0.6;
         planetMesh.rotation.x += delta * 0.25;
       }
@@ -169,12 +188,6 @@ function Planetarium({ categories }: { categories: SpecCategory[] }) {
 
   return (
     <>
-      {orbitNodes.map((node) => {
-        const rx = node.radius;
-        const ry = node.radius * node.flatten;
-        if (!Number.isFinite(rx) || !Number.isFinite(ry) || rx <= 0 || ry <= 0) return null;
-        return <OrbitRing key={`ring-${node.category.id}`} rx={rx} ry={ry} />;
-      })}
       <group ref={groupRef}>
         {orbitNodes.map((node) => (
           <group key={node.category.id}>
@@ -211,9 +224,12 @@ export function OrbitEffects({ categories }: { categories: SpecCategory[] }) {
   function InnerScene() {
     const { camera } = useThree();
     useEffect(() => {
-      camera.position.set(0, 0, 12);
-      camera.fov = 55;
-      camera.updateProjectionMatrix();
+      const perspectiveCamera = camera as PerspectiveCamera;
+      perspectiveCamera.position.set(0, 0, 12);
+      if ("fov" in perspectiveCamera) {
+        perspectiveCamera.fov = 55;
+        perspectiveCamera.updateProjectionMatrix();
+      }
     }, [camera]);
 
     return (

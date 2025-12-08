@@ -33,6 +33,8 @@ type CsvDevice = {
   sim_slots?: string;
   network_tech?: string;
   spec_score?: string;
+  sketchfab_uid?: string;
+  "3d_model_uid"?: string;
 };
 
 const DEVICES_CSV_PATH = path.join(process.cwd(), "datasets", "devices.csv");
@@ -178,6 +180,7 @@ function toDevice(record: CsvDevice): Device {
   const name = record.model?.trim() || `Device ${record.id}`;
   const price = toNumber(record.price);
   const releaseYear = Number.parseInt(record.release_year ?? "", 10);
+  const sketchfabUid = record.sketchfab_uid?.trim() || record["3d_model_uid"]?.trim();
 
   return {
     id: record.id.toString(),
@@ -188,7 +191,7 @@ function toDevice(record: CsvDevice): Device {
     priceUSD: price,
     imageUrl: undefined,
     modelUrl: undefined,
-    sketchfabUid: undefined,
+    sketchfabUid: sketchfabUid || undefined,
     techSpecsId: undefined,
     description: `${record.category ?? "Device"} from devices.csv`,
     categories: buildCategories(record),

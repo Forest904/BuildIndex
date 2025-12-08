@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 export function SpaceScene() {
   const device = useDeviceStore((state) => state.selectedDevice) ?? defaultDevice;
   const categories = device.categories ?? [];
-  const { speedMultiplier, ellipse, setSpeedMultiplier, setEllipse } = useOrbitStore();
+  const { speedMultiplier, setSpeedMultiplier } = useOrbitStore();
   const { user, fetchMe } = useAuthStore();
   const [favorite, setFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
@@ -73,7 +73,7 @@ export function SpaceScene() {
       <div className="absolute inset-0 space-grid opacity-50" aria-hidden />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(103,232,249,0.14),transparent_28%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.16),transparent_26%)]" />
 
-      <div className="relative mx-auto h-[calc(100vh-112px)] max-w-7xl px-6 py-8">
+      <div className="relative h-[calc(100vh-112px)] w-full px-4 py-6 sm:px-6 lg:px-8">
         <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/8 bg-slate-950/70 shadow-[0_0_80px_rgba(0,0,0,0.4)]">
           <div className="relative z-40 flex flex-col items-center gap-2 px-4 pt-6 text-center">
             <div className="flex items-center gap-3">
@@ -125,23 +125,8 @@ export function SpaceScene() {
                   className="w-full accent-cyan-400"
                 />
               </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span>Flatten</span>
-                  <span className="text-slate-200">{ellipse.toFixed(2)}x</span>
-                </div>
-                <input
-                  type="range"
-                  min={0.4}
-                  max={1.1}
-                  step={0.04}
-                  value={ellipse}
-                  onChange={(e) => setEllipse(parseFloat(e.target.value))}
-                  className="w-full accent-purple-400"
-                />
-              </div>
               <p className="text-[10px] text-slate-500">
-                Hover to pause a planet card. Controls adjust all ellipses and motion at once.
+                Hover to pause a planet card. Speed adjusts all motion at once.
               </p>
             </div>
           </div>

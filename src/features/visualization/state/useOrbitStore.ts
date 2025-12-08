@@ -2,14 +2,12 @@ import { create } from "zustand";
 
 interface OrbitState {
   speedMultiplier: number; // 0.5 - 2
-  ellipse: number; // 0.6 - 1.4 scaleY factor
+  ellipse: number; // 0.5 fixed scaleY factor
   setSpeedMultiplier: (value: number) => void;
-  setEllipse: (value: number) => void;
 }
 
 export const useOrbitStore = create<OrbitState>((set) => ({
-  speedMultiplier: 1,
-  ellipse: 0.8,
+  speedMultiplier: 0.5,
+  ellipse: 0.5,
   setSpeedMultiplier: (value) => set({ speedMultiplier: value }),
-  setEllipse: (value) => set({ ellipse: value }),
 }));
